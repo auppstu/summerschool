@@ -1,0 +1,2 @@
+aprun: file ./prog.c needs to be readable and executable
+aprun: Exiting due to errors. Application aborted
