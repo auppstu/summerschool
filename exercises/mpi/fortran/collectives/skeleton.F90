@@ -8,6 +8,9 @@ program coll_exer
   integer, dimension(2*n_mpi_tasks) :: sendbuf, recvbuf
   integer, dimension(2*n_mpi_tasks**2) :: printbuf
 
+  integer :: recvcounts(4) = (/1, 1, 2, 4 /)
+  integer :: displs(4) = (/ 0, 1, 2, 4 /) 
+
   call mpi_init(ierr)
   call mpi_comm_size(MPI_COMM_WORLD, ntasks, ierr)
   call mpi_comm_rank(MPI_COMM_WORLD, rank, ierr)
@@ -19,6 +22,12 @@ program coll_exer
      call mpi_abort(MPI_COMM_WORLD, -1, ierr)
   end if
 
+  if (rank<2) then
+     color = 0
+  else
+	color = 1
+  end if
+
   ! Initialize message buffers
   call init_buffers
 
@@ -28,9 +37,24 @@ program coll_exer
   ! TODO: use a single collective communication call (and maybe prepare
   !       some parameters for the call)
 
+  !call mpi_bcast(sendbuf, 8, mpi_integer, 0, mpi_comm_world, ierr)
+  !call mpi_scatter(sendbuf, 2, mpi_integer, recvbuf(1:2), 2, mpi_integer, 0, &
+  !& mpi_comm_world, ierr)
+
+  !call mpi_gatherv(sendbuf, recvcounts(rank+1), mpi_integer, &
+  !& recvbuf, recvcounts, displs, mpi_integer, 1, mpi_comm_world, ierr)
+  
+  !call mpi_alltoall(sendbuf, 2, mpi_integer, &
+  !& recvbuf, 2, mpi_integer, mpi_comm_world, ierr) 
+ 
+  call mpi_comm_split(mpi_comm_world, color, rank, sub_comm, ierr)
+  call mpi_reduce(sendbuf, recvbuf, 8, mpi_integer, mpi_sum, 0, &
+  & sub_comm, ierr)
+
   ! Print data that was received
   ! TODO: add correct buffer
-  call print_buffers(...)
+  !recvbuf = sendbuf
+  call print_buffers(recvbuf)
 
   call mpi_finalize(ierr)
 
